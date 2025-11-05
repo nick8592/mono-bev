@@ -1,0 +1,103 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Dataset
+nuscenes/
+*.tar.gz
+*.zip
+
+# Model checkpoints and outputs
+outputs/
+checkpoints/
+*.pth
+*.pt
+
+# Logs
+*.log
+logs/
+training.log
+
+# nuScenes cache
+.nuscenes/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Weights and models
+*.h5
+*.pkl
+*.ckpt
+
+# YOLO downloads
+yolo*.pt
+yolo*.yaml
+
+# Large output files
+*.png
+*.jpg
+*.jpeg
+*.gif
+predictions/
+visualizations/
