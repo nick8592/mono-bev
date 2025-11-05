@@ -45,7 +45,7 @@ class BEVPipeline:
         # Load checkpoint if provided
         if checkpoint_path and os.path.exists(checkpoint_path):
             print(f"Loading checkpoint from {checkpoint_path}")
-            checkpoint = torch.load(checkpoint_path, map_location=self.device)
+            checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=True)
             self.bev_model.load_state_dict(checkpoint['model_state_dict'])
             print("Checkpoint loaded successfully!")
         else:
@@ -201,14 +201,20 @@ class BEVPipeline:
                     gt_objects=results['gt_bev'],
                     pred_objects=results['predictions_bev'],
                     title=f"BEV - Sample {sample_token[:8]}",
-                    save_path=os.path.join(self.output_dir, f"{sample_token}_bev.png")
+                    save_path=os.path.join(self.output_dir, f"{sample_token}_bev.png"),
+                    show_class_labels=self.config['visualization'].get('show_class_labels', True),
+                    show_gt=self.config['visualization'].get('show_gt', True),
+                    show_pred=self.config['visualization'].get('show_predictions', True)
                 )
                 
                 # Comparison plot
                 self.visualizer.create_comparison_plot(
                     image, results['detections_2d'],
                     results['gt_bev'], results['predictions_bev'],
-                    sample_token, save_dir=self.output_dir
+                    sample_token, save_dir=self.output_dir,
+                    show_class_labels=self.config['visualization'].get('show_class_labels', True),
+                    show_gt=self.config['visualization'].get('show_gt', True),
+                    show_pred=self.config['visualization'].get('show_predictions', True)
                 )
             
             # Collect metrics

@@ -55,8 +55,9 @@ visualization:
   grid_size: 0.5  # meters per grid cell
   save_dir: "outputs/visualizations"
   save_detections: true
-  show_gt: true
-  show_predictions: true
+  show_gt: true  # Show ground truth objects in BEV
+  show_predictions: true  # Show predicted objects in BEV
+  show_class_labels: true  # Show class labels on BEV boxes
   
 # Logging
 logging:

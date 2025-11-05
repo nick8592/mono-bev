@@ -26,10 +26,8 @@ class BEVVisualizer:
         self.config = config
         self.bev_range = config['visualization']['bev_range']  # [x_min, x_max, y_min, y_max]
         self.grid_size = config['visualization']['grid_size']
-        self.save_dir = config['visualization']['save_dir']
         
-        # Create save directory
-        os.makedirs(self.save_dir, exist_ok=True)
+        # Note: Directory creation is handled by save methods when needed
         
         # Class colors (RGB)
         self.class_colors = {
@@ -50,7 +48,10 @@ class BEVVisualizer:
                  pred_objects: List[Dict] = None,
                  title: str = "BEV Visualization",
                  save_path: str = None,
-                 show: bool = False) -> np.ndarray:
+                 show: bool = False,
+                 show_class_labels: bool = True,
+                 show_gt: bool = True,
+                 show_pred: bool = True) -> np.ndarray:
         """
         Plot objects in BEV space.
         
@@ -60,6 +61,9 @@ class BEVVisualizer:
             title: Plot title
             save_path: Path to save figure
             show: Whether to display the plot
+            show_class_labels: Whether to show class labels on boxes
+            show_gt: Whether to show ground truth objects
+            show_pred: Whether to show predicted objects
             
         Returns:
             Figure as numpy array
@@ -86,26 +90,30 @@ class BEVVisualizer:
         ax.add_patch(ego_rect)
         
         # Plot ground truth objects
-        if gt_objects:
+        if gt_objects and show_gt:
             for obj in gt_objects:
-                self._draw_bev_box(ax, obj, color='green', linestyle='-', label='GT', alpha=0.5)
+                self._draw_bev_box(ax, obj, color='green', linestyle='-', label='GT', 
+                                  alpha=0.5, show_class_label=show_class_labels)
         
         # Plot predicted objects
-        if pred_objects:
+        if pred_objects and show_pred:
             for obj in pred_objects:
-                self._draw_bev_box(ax, obj, color='red', linestyle='--', label='Pred', alpha=0.7)
+                self._draw_bev_box(ax, obj, color='blue', linestyle='--', label='Pred', 
+                                  alpha=0.7, show_class_label=show_class_labels)
         
         # Add legend
-        if gt_objects or pred_objects:
+        legend_added = False
+        if (gt_objects and show_gt) or (pred_objects and show_pred):
             handles = []
             labels = []
-            if gt_objects:
+            if gt_objects and show_gt:
                 handles.append(plt.Line2D([0], [0], color='green', linewidth=2, linestyle='-'))
                 labels.append('Ground Truth')
-            if pred_objects:
-                handles.append(plt.Line2D([0], [0], color='red', linewidth=2, linestyle='--'))
+            if pred_objects and show_pred:
+                handles.append(plt.Line2D([0], [0], color='blue', linewidth=2, linestyle='-'))
                 labels.append('Prediction')
             ax.legend(handles, labels, loc='upper right')
+            legend_added = True
         
         # Save figure
         if save_path:
@@ -124,7 +132,8 @@ class BEVVisualizer:
         
         return img
     
-    def _draw_bev_box(self, ax, obj: Dict, color: str, linestyle: str, label: str, alpha: float = 0.7):
+    def _draw_bev_box(self, ax, obj: Dict, color: str, linestyle: str, label: str, 
+                     alpha: float = 0.7, show_class_label: bool = True):
         """
         Draw a bounding box in BEV space.
         
@@ -135,6 +144,7 @@ class BEVVisualizer:
             linestyle: Line style
             label: Label (GT or Pred)
             alpha: Transparency
+            show_class_label: Whether to show class label text
         """
         x = obj['x']
         y = obj['y']
@@ -143,10 +153,15 @@ class BEVVisualizer:
         length = obj.get('length', 4.0)
         obj_class = obj.get('class', 'unknown')
         
-        # Get class-specific color if available
-        if obj_class in self.class_colors:
-            rgb = self.class_colors[obj_class]
-            color = (rgb[0]/255, rgb[1]/255, rgb[2]/255)
+        # Use provided color (don't override with class-specific color for GT/Pred distinction)
+        if isinstance(color, str):
+            # Keep the color as is (green/blue for GT/Pred)
+            pass
+        else:
+            # Get class-specific color if available (for custom coloring)
+            if obj_class in self.class_colors:
+                rgb = self.class_colors[obj_class]
+                color = (rgb[0]/255, rgb[1]/255, rgb[2]/255)
         
         # Compute box corners
         corners = self._get_box_corners(x, y, yaw, width, length)
@@ -173,10 +188,11 @@ class BEVVisualizer:
         ax.arrow(x_rot, y_rot, dx_rot, dy_rot, head_width=0.5, head_length=0.3, 
                 fc=color, ec=color, alpha=alpha)
         
-        # Add text label (rotated position)
-        ax.text(x_rot, y_rot, obj_class, fontsize=8, color='white',
-               ha='center', va='center',
-               bbox=dict(boxstyle='round', facecolor=color, alpha=0.7))
+        # Add text label (rotated position) - only if show_class_label is True
+        if show_class_label:
+            ax.text(x_rot, y_rot, obj_class, fontsize=8, color='white',
+                   ha='center', va='center',
+                   bbox=dict(boxstyle='round', facecolor=color, alpha=0.7))
     
     def _get_box_corners(self, x: float, y: float, yaw: float, 
                         width: float, length: float) -> np.ndarray:
@@ -270,7 +286,10 @@ class BEVVisualizer:
                               gt_bev: List[Dict],
                               pred_bev: List[Dict],
                               sample_token: str,
-                              save_dir: str = None) -> None:
+                              save_dir: str = None,
+                              show_class_labels: bool = True,
+                              show_gt: bool = True,
+                              show_pred: bool = True) -> None:
         """
         Create a side-by-side comparison plot showing 2D detections and BEV.
         
@@ -281,6 +300,9 @@ class BEVVisualizer:
             pred_bev: Predicted BEV objects
             sample_token: Sample identifier
             save_dir: Directory to save plot
+            show_class_labels: Whether to show class labels on boxes
+            show_gt: Whether to show ground truth objects
+            show_pred: Whether to show predicted objects
         """
         fig = plt.figure(figsize=(20, 8))
         
@@ -312,21 +334,27 @@ class BEVVisualizer:
         ax2.add_patch(ego_rect)
         
         # Plot ground truth and predictions
-        if gt_bev:
+        if gt_bev and show_gt:
             for obj in gt_bev:
-                self._draw_bev_box(ax2, obj, color='green', linestyle='-', label='GT', alpha=0.5)
+                self._draw_bev_box(ax2, obj, color='green', linestyle='-', label='GT', 
+                                  alpha=0.5, show_class_label=show_class_labels)
         
-        if pred_bev:
+        if pred_bev and show_pred:
             for obj in pred_bev:
-                self._draw_bev_box(ax2, obj, color='red', linestyle='--', label='Pred', alpha=0.7)
+                self._draw_bev_box(ax2, obj, color='blue', linestyle='--', label='Pred', 
+                                  alpha=0.7, show_class_label=show_class_labels)
         
         # Add legend
-        handles = [
-            plt.Line2D([0], [0], color='green', linewidth=2, linestyle='-'),
-            plt.Line2D([0], [0], color='red', linewidth=2, linestyle='--')
-        ]
-        labels = ['Ground Truth', 'Prediction']
-        ax2.legend(handles, labels, loc='upper right')
+        if (gt_bev and show_gt) or (pred_bev and show_pred):
+            handles = []
+            labels = []
+            if gt_bev and show_gt:
+                handles.append(plt.Line2D([0], [0], color='green', linewidth=2, linestyle='-'))
+                labels.append('Ground Truth')
+            if pred_bev and show_pred:
+                handles.append(plt.Line2D([0], [0], color='blue', linewidth=2, linestyle='--'))
+                labels.append('Prediction')
+            ax2.legend(handles, labels, loc='upper right')
         
         plt.tight_layout()
         

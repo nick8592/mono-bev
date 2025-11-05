@@ -25,7 +25,7 @@ bev_model:
   
 # Training parameters
 training:
-  batch_size: 2  # Reduced from 32 for limited GPU memory
+  batch_size: 8  # Reduced from 32 for limited GPU memory
   num_epochs: 100
   learning_rate: 0.001
   weight_decay: 0.0001
@@ -52,10 +52,10 @@ training:
 visualization:
   bev_range: [-50, 50, -50, 50]  # [x_min, x_max, y_min, y_max] in meters
   grid_size: 0.5  # meters per grid cell
-  save_dir: "outputs/visualizations"
   save_detections: true
-  show_gt: true
-  show_predictions: true
+  show_gt: true  # Show ground truth objects in BEV
+  show_predictions: true  # Show predicted objects in BEV
+  show_class_labels: false  # Show class labels on BEV boxes
   
 # Logging
 logging:
