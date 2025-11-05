@@ -207,7 +207,7 @@ class NuScenesDataset(Dataset):
         return -1  # Unknown class
 
 
-def create_dataloaders(config: dict) -> Tuple[DataLoader, DataLoader]:
+def create_dataloaders(config: dict, num_workers: int = 2) -> Tuple[DataLoader, DataLoader]:
     """
     Create train and test dataloaders for nuScenes dataset.
     
@@ -260,7 +260,7 @@ def create_dataloaders(config: dict) -> Tuple[DataLoader, DataLoader]:
         train_dataset,
         batch_size=config['training']['batch_size'],
         shuffle=True,
-        num_workers=2,  # Reduced from 4 for limited resources
+        num_workers=num_workers,
         pin_memory=True,
         collate_fn=collate_fn
     )
@@ -269,7 +269,7 @@ def create_dataloaders(config: dict) -> Tuple[DataLoader, DataLoader]:
         test_dataset,
         batch_size=config['inference']['batch_size'],
         shuffle=False,
-        num_workers=2,  # Reduced from 4 for limited resources
+        num_workers=num_workers,
         pin_memory=True,
         collate_fn=collate_fn
     )

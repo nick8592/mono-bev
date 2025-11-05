@@ -125,7 +125,7 @@ class BEVTrainer:
         num_skipped_no_targets = 0
         
         # Gradient accumulation to simulate larger batch size
-        accumulation_steps = 8
+        accumulation_steps = self.config.get('training', {}).get('accumulation_steps', 8)
         
         # Clear GPU cache before training
         if torch.cuda.is_available():
@@ -430,7 +430,8 @@ def main():
     
     # Create data loaders
     print("Creating data loaders...")
-    train_loader, val_loader, nusc = create_dataloaders(config)
+    num_workers = config.get('training', {}).get('num_workers', 2)
+    train_loader, val_loader, nusc = create_dataloaders(config, num_workers=num_workers)
     
     # Initialize trainer
     trainer = BEVTrainer(config)
