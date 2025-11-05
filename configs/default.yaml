@@ -25,6 +25,7 @@ bev_model:
   
 # Training parameters
 training:
+  debug: false
   pin_memory: true  # Set to true for faster GPU transfer, false for low memory
   batch_size: 8 
   num_epochs: 10

@@ -52,6 +52,7 @@ class BEVTrainer:
             config: Configuration dictionary
         """
         self.config = config
+        self.debug = config['training']['debug']
         self.device = torch.device(config['detector']['device'] if torch.cuda.is_available() else 'cpu')
         print(f"Using device: {self.device}")
         
@@ -167,7 +168,7 @@ class BEVTrainer:
                 continue
             
             # Prepare targets
-            targets, matched_indices = prepare_bev_targets(bev_coords, detections, gt_boxes_2d)
+            targets, matched_indices = prepare_bev_targets(bev_coords, detections, gt_boxes_2d, debug=self.debug)
             
             if len(targets['position']) == 0:
                 num_skipped_no_targets += 1
@@ -230,11 +231,12 @@ class BEVTrainer:
         avg_loss = total_loss / max(num_batches, 1)
         
         # Print statistics
-        print(f"\nTraining Statistics:")
-        print(f"  Valid samples: {num_valid_samples}")
-        print(f"  Skipped (no detections): {num_skipped_no_detections}")
-        print(f"  Skipped (no targets): {num_skipped_no_targets}")
-        print(f"  Batches processed: {num_batches}")
+        if self.debug:
+            print(f"\nTraining Statistics:")
+            print(f"  Valid samples: {num_valid_samples}")
+            print(f"  Skipped (no detections): {num_skipped_no_detections}")
+            print(f"  Skipped (no targets): {num_skipped_no_targets}")
+            print(f"  Batches processed: {num_batches}")
         
         return avg_loss
     
@@ -283,7 +285,7 @@ class BEVTrainer:
                     continue
                 
                 # Prepare targets
-                targets, matched_indices = prepare_bev_targets(bev_coords, detections, gt_boxes_2d)
+                targets, matched_indices = prepare_bev_targets(bev_coords, detections, gt_boxes_2d, self.debug)
                 
                 if len(targets['position']) == 0:
                     continue
@@ -416,26 +418,26 @@ def main():
     """Main function to run training."""
     parser = argparse.ArgumentParser(description='Train BEV Transformation Model')
     parser.add_argument('--config', type=str, default='configs/default.yaml',
-                       help='Path to configuration file')
+                        help='Path to configuration file')
     args = parser.parse_args()
-    
+
     # Load configuration
     print(f"Loading configuration from {args.config}")
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
-    
+
     # Set random seeds for reproducibility
     torch.manual_seed(42)
     np.random.seed(42)
-    
+
     # Create data loaders
     print("Creating data loaders...")
     num_workers = config.get('training', {}).get('num_workers', 2)
     train_loader, val_loader, nusc = create_dataloaders(config, num_workers=num_workers)
-    
+
     # Initialize trainer
     trainer = BEVTrainer(config)
-    
+
     # Start training
     trainer.train(train_loader, val_loader)
 

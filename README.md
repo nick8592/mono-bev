@@ -42,8 +42,7 @@ mono-bev/
 ├── tests/                     # Unit tests
 │   └── test_pipeline.py
 ├── docs/                      # Additional documentation
-│   ├── ARCHITECTURE.md       # System architecture
-│   └── API.md                # API documentation
+│   └──  ARCHITECTURE.md       # System architecture
 ├── outputs/                   # Training outputs
 │   ├── checkpoints/          # Model checkpoints
 │   ├── logs/                 # Training logs
@@ -149,9 +148,6 @@ training:
   num_epochs: 100
   learning_rate: 0.001
   early_stopping_patience: 10
-  accumulation_steps: 4         # Gradient accumulation steps (for large effective batch size)
-  num_workers: 1                # DataLoader worker processes (set 1 for low memory)
-  pin_memory: false             # Set false for low memory, true for faster GPU transfer
 
 # Visualization
 visualization:

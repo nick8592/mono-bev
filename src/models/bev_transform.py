@@ -281,7 +281,8 @@ def compute_iou_2d(box1, box2):
 
 def prepare_bev_targets(bev_coords: List[List[Dict]], 
                        detections: List[List[Dict]],
-                       gt_boxes_2d: List[List[Dict]]) -> Tuple[Dict[str, torch.Tensor], List[Tuple[int, int]]]:
+                       gt_boxes_2d: List[List[Dict]],
+                       debug: bool = False) -> Tuple[Dict[str, torch.Tensor], List[Tuple[int, int]]]:
     """
     Prepare BEV ground truth targets matching detections.
     Uses IoU matching to align detections with ground truth.
@@ -303,7 +304,6 @@ def prepare_bev_targets(bev_coords: List[List[Dict]],
     total_detections = 0
     total_gt = 0
     matched_count = 0
-    debug_printed = False
     
     global_det_idx = 0  # Global detection index across all images in batch
     
@@ -316,11 +316,10 @@ def prepare_bev_targets(bev_coords: List[List[Dict]],
         total_gt += len(gt_list)
         
         # Debug: print class names once to see the format
-        if not debug_printed and len(det_list) > 0 and len(gt_list) > 0:
+        if debug and len(det_list) > 0 and len(gt_list) > 0:
             print(f"\n[Class Names Debug]")
             print(f"Detection classes: {[d['class'] for d in det_list[:3]]}")
             print(f"GT classes: {[g['class'] for g in gt_list[:3]]}")
-            debug_printed = True
         
         # For each detection, find the best matching ground truth using IoU
         for local_det_idx, det in enumerate(det_list):
@@ -373,7 +372,7 @@ def prepare_bev_targets(bev_coords: List[List[Dict]],
             global_det_idx += 1
         
     # Debug output every 100 calls
-    if np.random.random() < 0.01:  # 1% sampling
+    if debug and np.random.random() < 0.01:  # 1% sampling
         print(f"\n[Matching Debug] Detections: {total_detections}, GT: {total_gt}, Matched: {matched_count}")
     
     if len(all_positions) == 0:
