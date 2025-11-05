@@ -255,13 +255,16 @@ def create_dataloaders(config: dict, num_workers: int = 2) -> Tuple[DataLoader, 
     train_dataset = NuScenesDataset(nusc, train_samples, camera=camera)
     test_dataset = NuScenesDataset(nusc, test_samples, camera=camera)
     
+    # Get pin_memory setting from config, default to False for low memory
+    pin_memory = config.get('training', {}).get('pin_memory', False)
+
     # Create dataloaders
     train_loader = DataLoader(
         train_dataset,
         batch_size=config['training']['batch_size'],
         shuffle=True,
         num_workers=num_workers,
-        pin_memory=True,
+        pin_memory=pin_memory,
         collate_fn=collate_fn
     )
     
@@ -270,7 +273,7 @@ def create_dataloaders(config: dict, num_workers: int = 2) -> Tuple[DataLoader, 
         batch_size=config['inference']['batch_size'],
         shuffle=False,
         num_workers=num_workers,
-        pin_memory=True,
+        pin_memory=pin_memory,
         collate_fn=collate_fn
     )
     

@@ -25,7 +25,8 @@ bev_model:
   
 # Training parameters
 training:
-  batch_size: 4  # Reduced from 32 for limited GPU memory
+  pin_memory: true  # Set to true for faster GPU transfer, false for low memory
+  batch_size: 8 
   num_epochs: 10
   learning_rate: 0.001
   weight_decay: 0.0001
@@ -34,8 +35,8 @@ training:
   step_size: 30
   gamma: 0.1
   early_stopping_patience: 10
-  accumulation_steps: 8  # Number of steps to accumulate gradients before optimizer step
-  num_workers: 8  # Number of worker processes for DataLoader
+  accumulation_steps: 4  
+  num_workers: 1 
   
   # Loss weights
   loss_weights:
