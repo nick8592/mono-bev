@@ -52,10 +52,19 @@ training:
 visualization:
   bev_range: [-50, 50, -50, 50]  # [x_min, x_max, y_min, y_max] in meters
   grid_size: 0.5  # meters per grid cell
-  save_detections: true
-  show_gt: true  # Show ground truth objects in BEV
-  show_predictions: true  # Show predicted objects in BEV
-  show_class_labels: false  # Show class labels on BEV boxes
+  image_format: "jpg"  # Image format: jpg or png
+  
+  # 2D Object Detection visualization
+  detection_2d:
+    show_ground_truth: true
+    show_predictions: true
+    show_class_labels: true
+  
+  # BEV visualization
+  bev:
+    show_ground_truth: true
+    show_predictions: true
+    show_class_labels: false
   
 # Logging
 logging:

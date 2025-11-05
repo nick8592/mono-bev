@@ -26,6 +26,7 @@ class BEVVisualizer:
         self.config = config
         self.bev_range = config['visualization']['bev_range']  # [x_min, x_max, y_min, y_max]
         self.grid_size = config['visualization']['grid_size']
+        self.image_format = config['visualization'].get('image_format', 'png')  # jpg or png
         
         # Note: Directory creation is handled by save methods when needed
         
@@ -231,7 +232,10 @@ class BEVVisualizer:
                                detections: List[Dict],
                                gt_boxes: List[Dict] = None,
                                save_path: str = None,
-                               show: bool = False) -> np.ndarray:
+                               show: bool = False,
+                               show_gt: bool = True,
+                               show_pred: bool = True,
+                               show_class_labels: bool = True) -> np.ndarray:
         """
         Visualize 2D detections on image.
         
@@ -241,6 +245,9 @@ class BEVVisualizer:
             gt_boxes: List of ground truth boxes
             save_path: Path to save figure
             show: Whether to display the plot
+            show_gt: Whether to show ground truth boxes
+            show_pred: Whether to show predicted boxes
+            show_class_labels: Whether to show class labels
             
         Returns:
             Image with drawn detections
@@ -248,23 +255,26 @@ class BEVVisualizer:
         img_vis = image.copy()
         
         # Draw ground truth boxes in green
-        if gt_boxes:
+        if gt_boxes and show_gt:
             for box in gt_boxes:
                 bbox = box['bbox']
                 x1, y1, x2, y2 = map(int, bbox)
                 cv2.rectangle(img_vis, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                label = f"GT: {box.get('class', 'unknown')}"
-                cv2.putText(img_vis, label, (x1, y1 - 10),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                if show_class_labels:
+                    label = f"GT: {box.get('class', 'unknown')}"
+                    cv2.putText(img_vis, label, (x1, y1 - 10),
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
         # Draw detections in red
-        for det in detections:
-            bbox = det['bbox']
-            x1, y1, x2, y2 = map(int, bbox)
-            cv2.rectangle(img_vis, (x1, y1), (x2, y2), (0, 0, 255), 2)
-            label = f"{det['class']}: {det['confidence']:.2f}"
-            cv2.putText(img_vis, label, (x1, y1 - 10),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        if show_pred:
+            for det in detections:
+                bbox = det['bbox']
+                x1, y1, x2, y2 = map(int, bbox)
+                cv2.rectangle(img_vis, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                if show_class_labels:
+                    label = f"{det['class']}: {det['confidence']:.2f}"
+                    cv2.putText(img_vis, label, (x1, y1 - 10),
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         
         if save_path:
             cv2.imwrite(save_path, cv2.cvtColor(img_vis, cv2.COLOR_RGB2BGR))
@@ -287,9 +297,13 @@ class BEVVisualizer:
                               pred_bev: List[Dict],
                               sample_token: str,
                               save_dir: str = None,
-                              show_class_labels: bool = True,
-                              show_gt: bool = True,
-                              show_pred: bool = True) -> None:
+                              show_class_labels_2d: bool = True,
+                              show_gt_2d: bool = True,
+                              show_pred_2d: bool = True,
+                              show_class_labels_bev: bool = True,
+                              show_gt_bev: bool = True,
+                              show_pred_bev: bool = True,
+                              gt_boxes_2d: List[Dict] = None) -> None:
         """
         Create a side-by-side comparison plot showing 2D detections and BEV.
         
@@ -300,15 +314,23 @@ class BEVVisualizer:
             pred_bev: Predicted BEV objects
             sample_token: Sample identifier
             save_dir: Directory to save plot
-            show_class_labels: Whether to show class labels on boxes
-            show_gt: Whether to show ground truth objects
-            show_pred: Whether to show predicted objects
+            show_class_labels_2d: Whether to show class labels on 2D boxes
+            show_gt_2d: Whether to show ground truth 2D boxes
+            show_pred_2d: Whether to show predicted 2D boxes
+            show_class_labels_bev: Whether to show class labels on BEV boxes
+            show_gt_bev: Whether to show ground truth BEV objects
+            show_pred_bev: Whether to show predicted BEV objects
+            gt_boxes_2d: Ground truth 2D boxes
         """
         fig = plt.figure(figsize=(20, 8))
         
         # 2D detections
         ax1 = fig.add_subplot(1, 2, 1)
-        img_with_dets = self.visualize_detections_2d(image, detections)
+        img_with_dets = self.visualize_detections_2d(
+            image, detections, gt_boxes=gt_boxes_2d,
+            show_gt=show_gt_2d, show_pred=show_pred_2d,
+            show_class_labels=show_class_labels_2d
+        )
         ax1.imshow(img_with_dets)
         ax1.set_title('2D Object Detections')
         ax1.axis('off')
@@ -334,24 +356,24 @@ class BEVVisualizer:
         ax2.add_patch(ego_rect)
         
         # Plot ground truth and predictions
-        if gt_bev and show_gt:
+        if gt_bev and show_gt_bev:
             for obj in gt_bev:
                 self._draw_bev_box(ax2, obj, color='green', linestyle='-', label='GT', 
-                                  alpha=0.5, show_class_label=show_class_labels)
+                                  alpha=0.5, show_class_label=show_class_labels_bev)
         
-        if pred_bev and show_pred:
+        if pred_bev and show_pred_bev:
             for obj in pred_bev:
                 self._draw_bev_box(ax2, obj, color='blue', linestyle='--', label='Pred', 
-                                  alpha=0.7, show_class_label=show_class_labels)
+                                  alpha=0.7, show_class_label=show_class_labels_bev)
         
         # Add legend
-        if (gt_bev and show_gt) or (pred_bev and show_pred):
+        if (gt_bev and show_gt_bev) or (pred_bev and show_pred_bev):
             handles = []
             labels = []
-            if gt_bev and show_gt:
+            if gt_bev and show_gt_bev:
                 handles.append(plt.Line2D([0], [0], color='green', linewidth=2, linestyle='-'))
                 labels.append('Ground Truth')
-            if pred_bev and show_pred:
+            if pred_bev and show_pred_bev:
                 handles.append(plt.Line2D([0], [0], color='blue', linewidth=2, linestyle='--'))
                 labels.append('Prediction')
             ax2.legend(handles, labels, loc='upper right')
@@ -361,7 +383,8 @@ class BEVVisualizer:
         # Save figure
         if save_dir:
             os.makedirs(save_dir, exist_ok=True)
-            save_path = os.path.join(save_dir, f"{sample_token}_comparison.png")
+            ext = self.image_format if hasattr(self, 'image_format') else 'png'
+            save_path = os.path.join(save_dir, f"{sample_token}_comparison.{ext}")
             plt.savefig(save_path, dpi=150, bbox_inches='tight')
             print(f"Saved comparison plot to {save_path}")
         

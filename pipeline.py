@@ -190,10 +190,28 @@ class BEVPipeline:
             
             # Save visualizations
             if self.config['inference']['save_visualizations']:
+                # Get image format from config
+                img_format = self.config['visualization'].get('image_format', 'png')
+                
+                # Get 2D detection visualization settings
+                det_2d_config = self.config['visualization'].get('detection_2d', {})
+                show_gt_2d = det_2d_config.get('show_ground_truth', True)
+                show_pred_2d = det_2d_config.get('show_predictions', True)
+                show_labels_2d = det_2d_config.get('show_class_labels', True)
+                
+                # Get BEV visualization settings
+                bev_config = self.config['visualization'].get('bev', {})
+                show_gt_bev = bev_config.get('show_ground_truth', True)
+                show_pred_bev = bev_config.get('show_predictions', True)
+                show_labels_bev = bev_config.get('show_class_labels', True)
+                
                 # 2D detections
                 det_vis = self.visualizer.visualize_detections_2d(
                     image, results['detections_2d'], sample_data['boxes_2d'],
-                    save_path=os.path.join(self.output_dir, f"{sample_token}_2d.png")
+                    save_path=os.path.join(self.output_dir, f"{sample_token}_2d.{img_format}"),
+                    show_gt=show_gt_2d,
+                    show_pred=show_pred_2d,
+                    show_class_labels=show_labels_2d
                 )
                 
                 # BEV visualization
@@ -201,10 +219,10 @@ class BEVPipeline:
                     gt_objects=results['gt_bev'],
                     pred_objects=results['predictions_bev'],
                     title=f"BEV - Sample {sample_token[:8]}",
-                    save_path=os.path.join(self.output_dir, f"{sample_token}_bev.png"),
-                    show_class_labels=self.config['visualization'].get('show_class_labels', True),
-                    show_gt=self.config['visualization'].get('show_gt', True),
-                    show_pred=self.config['visualization'].get('show_predictions', True)
+                    save_path=os.path.join(self.output_dir, f"{sample_token}_bev.{img_format}"),
+                    show_class_labels=show_labels_bev,
+                    show_gt=show_gt_bev,
+                    show_pred=show_pred_bev
                 )
                 
                 # Comparison plot
@@ -212,9 +230,13 @@ class BEVPipeline:
                     image, results['detections_2d'],
                     results['gt_bev'], results['predictions_bev'],
                     sample_token, save_dir=self.output_dir,
-                    show_class_labels=self.config['visualization'].get('show_class_labels', True),
-                    show_gt=self.config['visualization'].get('show_gt', True),
-                    show_pred=self.config['visualization'].get('show_predictions', True)
+                    gt_boxes_2d=sample_data['boxes_2d'],
+                    show_class_labels_2d=show_labels_2d,
+                    show_gt_2d=show_gt_2d,
+                    show_pred_2d=show_pred_2d,
+                    show_class_labels_bev=show_labels_bev,
+                    show_gt_bev=show_gt_bev,
+                    show_pred_bev=show_pred_bev
                 )
             
             # Collect metrics
