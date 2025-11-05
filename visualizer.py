@@ -66,22 +66,22 @@ class BEVVisualizer:
         """
         fig, ax = plt.subplots(figsize=(10, 10))
         
-        # Set axis limits
+        # Set axis limits (rotated 90 degrees CCW: X becomes Y, Y becomes -X)
         x_min, x_max, y_min, y_max = self.bev_range
-        ax.set_xlim(x_min, x_max)
-        ax.set_ylim(y_min, y_max)
+        ax.set_xlim(-y_max, -y_min)  # Y-axis becomes horizontal (flipped)
+        ax.set_ylim(x_min, x_max)    # X-axis becomes vertical (forward is up)
         
         # Draw grid
         ax.grid(True, linestyle='--', alpha=0.5)
-        ax.set_xlabel('X (meters) - Forward')
-        ax.set_ylabel('Y (meters) - Left')
+        ax.set_xlabel('Y (meters) - Left/Right')
+        ax.set_ylabel('X (meters) - Forward')
         ax.set_title(title)
         ax.set_aspect('equal')
         
-        # Draw ego vehicle at origin
+        # Draw ego vehicle at origin (rotated 90 degrees CCW)
         ego_width = 2.0
         ego_length = 4.5
-        ego_rect = Rectangle((-ego_length/2, -ego_width/2), ego_length, ego_width,
+        ego_rect = Rectangle((-ego_width/2, -ego_length/2), ego_width, ego_length,
                             linewidth=2, edgecolor='black', facecolor='gray', alpha=0.5)
         ax.add_patch(ego_rect)
         
@@ -151,21 +151,30 @@ class BEVVisualizer:
         # Compute box corners
         corners = self._get_box_corners(x, y, yaw, width, length)
         
+        # Rotate corners 90 degrees CCW for visualization: (x, y) -> (-y, x)
+        corners_rotated = np.column_stack((-corners[:, 1], corners[:, 0]))
+        
         # Draw box
-        box = patches.Polygon(corners, closed=True, 
+        box = patches.Polygon(corners_rotated, closed=True, 
                              edgecolor=color, facecolor=color,
                              linestyle=linestyle, linewidth=2, alpha=alpha)
         ax.add_patch(box)
         
-        # Draw orientation arrow
+        # Draw orientation arrow (rotated 90 degrees CCW)
         arrow_length = length * 0.5
         dx = arrow_length * np.cos(yaw)
         dy = arrow_length * np.sin(yaw)
-        ax.arrow(x, y, dx, dy, head_width=0.5, head_length=0.3, 
+        # Rotate arrow: (dx, dy) -> (-dy, dx)
+        dx_rot = -dy
+        dy_rot = dx
+        # Rotate position: (x, y) -> (-y, x)
+        x_rot = -y
+        y_rot = x
+        ax.arrow(x_rot, y_rot, dx_rot, dy_rot, head_width=0.5, head_length=0.3, 
                 fc=color, ec=color, alpha=alpha)
         
-        # Add text label
-        ax.text(x, y, obj_class, fontsize=8, color='white',
+        # Add text label (rotated position)
+        ax.text(x_rot, y_rot, obj_class, fontsize=8, color='white',
                ha='center', va='center',
                bbox=dict(boxstyle='round', facecolor=color, alpha=0.7))
     
@@ -285,20 +294,20 @@ class BEVVisualizer:
         # BEV visualization
         ax2 = fig.add_subplot(1, 2, 2)
         
-        # Set axis limits
+        # Set axis limits (rotated 90 degrees CCW)
         x_min, x_max, y_min, y_max = self.bev_range
-        ax2.set_xlim(x_min, x_max)
-        ax2.set_ylim(y_min, y_max)
+        ax2.set_xlim(-y_max, -y_min)  # Y-axis becomes horizontal (flipped)
+        ax2.set_ylim(x_min, x_max)    # X-axis becomes vertical (forward is up)
         ax2.grid(True, linestyle='--', alpha=0.5)
-        ax2.set_xlabel('X (meters) - Forward')
-        ax2.set_ylabel('Y (meters) - Left')
+        ax2.set_xlabel('Y (meters) - Left/Right')
+        ax2.set_ylabel('X (meters) - Forward')
         ax2.set_title('BEV Space')
         ax2.set_aspect('equal')
         
-        # Draw ego vehicle
+        # Draw ego vehicle (rotated 90 degrees CCW)
         ego_width = 2.0
         ego_length = 4.5
-        ego_rect = Rectangle((-ego_length/2, -ego_width/2), ego_length, ego_width,
+        ego_rect = Rectangle((-ego_width/2, -ego_length/2), ego_width, ego_length,
                             linewidth=2, edgecolor='black', facecolor='gray', alpha=0.5)
         ax2.add_patch(ego_rect)
         
