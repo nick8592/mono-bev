@@ -41,10 +41,10 @@ def test_imports():
         print(f"\n❌ {len(failed)} package(s) failed to import:")
         for pkg in failed:
             print(f"   - {pkg}")
-        return False
+        assert False, f"Some packages failed to import: {failed}"
     else:
         print("\n✅ All packages imported successfully!")
-        return True
+        assert True
 
 
 def test_modules():
@@ -53,10 +53,10 @@ def test_modules():
     print("-" * 60)
     
     modules = [
-        "data_loader",
-        "detector",
-        "bev_transform",
-        "visualizer"
+        "src.data.data_loader",
+        "src.models.detector",
+        "src.models.bev_transform",
+        "src.visualization.visualizer"
     ]
     
     failed = []
@@ -75,10 +75,10 @@ def test_modules():
         print(f"\n❌ {len(failed)} module(s) failed to import:")
         for mod in failed:
             print(f"   - {mod}")
-        return False
+        assert False, f"Some project modules failed to import: {failed}"
     else:
         print("\n✅ All project modules imported successfully!")
-        return True
+        assert True
 
 
 def test_cuda():
@@ -89,7 +89,6 @@ def test_cuda():
     try:
         import torch
         cuda_available = torch.cuda.is_available()
-        
         if cuda_available:
             print(f"✓ CUDA is available")
             print(f"  Device count: {torch.cuda.device_count()}")
@@ -98,13 +97,12 @@ def test_cuda():
         else:
             print("⚠ CUDA is not available (CPU only)")
             print("  Training will be slower without GPU acceleration")
-        
         print("-" * 60)
-        return True
+        assert True
     except Exception as e:
         print(f"✗ Error checking CUDA: {e}")
         print("-" * 60)
-        return False
+        assert False, f"Error checking CUDA: {e}"
 
 
 def test_config():
@@ -116,15 +114,13 @@ def test_config():
         import yaml
         import os
         
-        if not os.path.exists('config.yaml'):
-            print("✗ config.yaml not found")
-            return False
-        
-        with open('config.yaml', 'r') as f:
+        config_path = os.path.join('configs', 'default.yaml')
+        if not os.path.exists(config_path):
+            print(f"✗ {config_path} not found")
+            assert False, f"{config_path} not found"
+        with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
-        print("✓ config.yaml loaded successfully")
-        
+        print(f"✓ {config_path} loaded successfully")
         # Check key sections
         required_sections = ['data', 'detector', 'bev_model', 'training', 'visualization']
         for section in required_sections:
@@ -132,7 +128,7 @@ def test_config():
                 print(f"  ✓ Section '{section}' found")
             else:
                 print(f"  ✗ Section '{section}' missing")
-        
+                assert False, f"Section '{section}' missing in config.yaml"
         # Check nuScenes path
         nuscenes_root = config.get('data', {}).get('nuscenes_root', '')
         if os.path.exists(nuscenes_root):
@@ -140,13 +136,13 @@ def test_config():
         else:
             print(f"  ⚠ nuScenes path not found: {nuscenes_root}")
             print("    Update config.yaml with correct path to continue")
-        
+            # Not a hard assert, just a warning
         print("-" * 60)
-        return True
+        assert True
     except Exception as e:
         print(f"✗ Error loading config: {e}")
         print("-" * 60)
-        return False
+        assert False, f"Error loading config: {e}"
 
 
 def main():
@@ -155,35 +151,9 @@ def main():
     print("MONO-BEV BUILD VERIFICATION")
     print("=" * 60 + "\n")
     
-    results = []
-    
-    results.append(("Package Imports", test_imports()))
-    results.append(("Project Modules", test_modules()))
-    results.append(("CUDA Support", test_cuda()))
-    results.append(("Configuration", test_config()))
-    
-    print("\n" + "=" * 60)
-    print("SUMMARY")
-    print("=" * 60)
-    
-    for name, passed in results:
-        status = "✅ PASS" if passed else "❌ FAIL"
-        print(f"{name:30s} {status}")
-    
-    all_passed = all(result[1] for result in results)
-    
-    print("=" * 60)
-    
-    if all_passed:
-        print("\n🎉 Build verification successful!")
-        print("\nYou can now:")
-        print("  1. Train the model: python train.py --config config.yaml")
-        print("  2. Run inference: python pipeline.py --config config.yaml")
-        return 0
-    else:
-        print("\n⚠️  Some tests failed. Please check the errors above.")
-        return 1
+    # Remove summary logic for pytest
+    pass
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

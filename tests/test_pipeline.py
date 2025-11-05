@@ -6,15 +6,15 @@ Quick test to validate image loading and YOLO detection pipeline
 import yaml
 import torch
 import numpy as np
-from data_loader import create_dataloaders
-from detector import YOLODetector
+from src.data.data_loader import create_dataloaders
+from src.models.detector import YOLODetector
 
 def test_pipeline():
     print("Testing image loading and detection pipeline...")
     print("-" * 60)
     
     # Load config
-    with open('config.yaml', 'r') as f:
+    with open('configs/default.yaml', 'r') as f:
         config = yaml.safe_load(f)
     
     # Create data loaders
@@ -60,14 +60,13 @@ def test_pipeline():
         print(f"✗ Detection failed: {e}")
         import traceback
         traceback.print_exc()
-        return False
+        assert False, f"Detection failed: {e}"
     
     print("\n" + "=" * 60)
     print("✓ Pipeline test passed!")
     print("=" * 60)
-    return True
+    assert True
 
 if __name__ == '__main__':
     import sys
-    success = test_pipeline()
-    sys.exit(0 if success else 1)
+    test_pipeline()
