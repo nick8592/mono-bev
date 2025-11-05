@@ -149,12 +149,18 @@ training:
   num_epochs: 100
   learning_rate: 0.001
   early_stopping_patience: 10
+  accumulation_steps: 4         # Gradient accumulation steps (for large effective batch size)
+  num_workers: 1                # DataLoader worker processes (set 1 for low memory)
+  pin_memory: false             # Set false for low memory, true for faster GPU transfer
 
 # Visualization
 visualization:
   bev_range: [-50, 50, -50, 50]  # [x_min, x_max, y_min, y_max]
   image_format: "jpg"             # jpg or png
 ```
+
+**Low-memory training tip:**
+- Set `batch_size: 1`, `num_workers: 1`, and `pin_memory: false` in the `training` section for minimal RAM usage.
 
 See `configs/default.yaml` for all available options.
 
