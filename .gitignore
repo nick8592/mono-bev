@@ -45,7 +45,6 @@ nuscenes/
 *.zip
 
 # Model checkpoints and outputs
-outputs/
 checkpoints/
 *.pth
 *.pt

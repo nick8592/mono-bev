@@ -1,0 +1,88 @@
+# Memory-Optimized Configuration for RTX 4060 Laptop GPU
+# nuScenes 2D-to-BEV Detection Pipeline
+
+# Dataset paths
+data:
+  nuscenes_root: "/home/nick/Documents/code/mono-bev/nuscenes"
+  version: "v1.0-trainval"
+  train_scenes: null  # null = auto-split, or specify list of scene names
+  test_scenes: null
+  train_split_ratio: 0.8
+  
+# YOLO Detection Model
+detector:
+  model_name: "yolo11n"  # Use nano model for lower memory (will auto-download)
+  confidence_threshold: 0.5
+  iou_threshold: 0.45
+  device: "cuda"  # cuda or cpu
+  
+# ResNet50 2D-to-BEV Regression Model
+bev_model:
+  input_size: [224, 224]
+  num_classes: 10  # nuScenes has 10 object classes
+  pretrained: true
+  dropout: 0.5
+  freeze_backbone: true  # Freeze ResNet backbone to save memory
+  
+# Training parameters - OPTIMIZED FOR LIMITED GPU MEMORY
+training:
+  batch_size: 2  # Small batch size for limited GPU memory
+  num_epochs: 50  # Reduced epochs for faster training
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  optimizer: "adam"  # adam, sgd
+  scheduler: "step"  # step, cosine, none
+  step_size: 15  # Adjusted for fewer epochs
+  gamma: 0.1
+  early_stopping_patience: 10
+  
+  # Loss weights
+  loss_weights:
+    position: 1.0
+    orientation: 0.5
+    size: 0.3
+  
+  # Data augmentation - disabled to save compute
+  augmentation:
+    enabled: false
+    horizontal_flip: 0.5
+    brightness: 0.2
+    contrast: 0.2
+  
+# Visualization
+visualization:
+  bev_range: [-50, 50, -50, 50]  # [x_min, x_max, y_min, y_max] in meters
+  grid_size: 0.5  # meters per grid cell
+  image_format: "jpg"  # Image format: jpg or png
+  
+  # 2D Object Detection visualization
+  detection_2d:
+    show_ground_truth: true
+    show_predictions: true
+    show_class_labels: true
+  
+  # BEV visualization
+  bev:
+    show_ground_truth: true
+    show_predictions: true
+    show_class_labels: true
+  
+# Logging
+logging:
+  log_dir: "outputs/logs"
+  checkpoint_dir: "outputs/checkpoints"
+  save_frequency: 5  # save checkpoint every N epochs
+  tensorboard: false  # Disabled to save memory
+  
+# Inference
+inference:
+  output_dir: "outputs/predictions"
+  batch_size: 1
+  save_visualizations: true
+  
+# Camera settings (for BEV transformation)
+camera:
+  # Which cameras to use (nuScenes has 6 cameras)
+  cameras: ["CAM_FRONT"]  # Use only front camera to reduce data
+  use_all_cameras: false
+  primary_camera: "CAM_FRONT"

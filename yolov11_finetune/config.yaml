@@ -1,0 +1,9 @@
+# Sample config for YOLOv11 fine-tuning on nuScenes
+# Update these values as needed
+train_data_path: /path/to/nuscenes/train
+val_data_path: /path/to/nuscenes/val
+pretrained_weights: ../../yolo11n.pt
+batch_size: 8
+learning_rate: 0.001
+epochs: 20
+output_dir: ../../outputs/yolov11_finetune
